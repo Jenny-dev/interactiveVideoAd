@@ -1,0 +1,30 @@
+#videoContainer{
+    display: table;
+    text-align: center;
+}
+
+#adVideo{ 
+    position:absolute;
+    height:100%;
+    width:100%;
+    left:0px;
+    top:0px;
+}
+
+.btn{
+    position: absolute;
+    left: 50%;
+    visibility: hidden;
+    height: 10%;
+    width: 25%;
+    bottom: 0px;
+    transform: translate(-50%, -50%);
+    -webkit-transform: translate(-50%, -50%);
+    font-size: 200%; 
+}
+
+.trackingPixelImg{
+    height: 1px;
+    width: 1px;
+    display: none;
+}
