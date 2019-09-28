@@ -16,11 +16,11 @@
     left: 50%;
     visibility: hidden;
     height: 10%;
-    width: 25%;
+    width: 25vw;
     bottom: 0px;
     transform: translate(-50%, -50%);
     -webkit-transform: translate(-50%, -50%);
-    font-size: 200%; 
+    font-size: 100%; 
 }
 
 .trackingPixelImg{

@@ -1,82 +1,87 @@
 
 function initVideoAd(){
-    
-    var prevVideoTime = -1;
-    var timeoutId = 0;
-    const operatingSystems = {ANDRIOD: "andriod", IOS: "ios", OTHER: "other"};	
+
     const downloadUrl = {
-                        ANDRIOD:"https://play.google.com/store/apps/details?id=com.huuuge.casino.texas&hl=en",
-                        IOS: "https://apps.apple.com/us/app/billionaire-casino-slots-777/id1098617974"
-                        };
+        ANDRIOD:"https://play.google.com/store/apps/details?id=com.huuuge.casino.texas&hl=en",
+        IOS: "https://apps.apple.com/us/app/billionaire-casino-slots-777/id1098617974"
+    };
     const trackingTarget = {
-                        START: "http://www.mocky.io/v2/5be098b232000072006496f5",
-                        END: "http://www.mocky.io/v2/5be098d03200004d006496f6"	
-                        };
+        START: "http://www.mocky.io/v2/5be098b232000072006496f5",
+        END: "http://www.mocky.io/v2/5be098d03200004d006496f6"	
+    };
+
+    const spinTimeSec = 4;                          //video's time value- when to pause it and show spin button
+    const downloadTimeSec = 21;                     //video's time value- when to show download button
+    const WaitForUserInteractionMiliSecs = 10000;   //timeout before jump to downloadTimeSec
+
+    runVideoAd(downloadUrl,trackingTarget,spinTimeSec,downloadTimeSec,WaitForUserInteractionMiliSecs);
+
+}
+
+function runVideoAd(downloadUrl,trackingTarget,spinTimeSec,downloadTimeSec,WaitForUserInteractionMiliSecs){
+    
+    let prevVideoTime = -1;
+    let timeoutId = 0;
+    const operatingSystems = {ANDRIOD: "andriod", IOS: "ios", OTHER: "other"};
+    	
+    const videoContainerElement = document.getElementById("videoContainer"); 
+    const adVideoElement = document.getElementById("adVideo");
+    const spinBtnElement = document.getElementById("spinBtn");
+    const downloadBtnElement = document.getElementById("downloadBtn");
 
 
     (function(){                        
-        var element;
-        element = document.getElementById("videoContainer"); 
-        element.addEventListener('click',unmuteVideo);
+        videoContainerElement.addEventListener('click',unmuteVideo);
 
-        element = document.getElementById("adVideo");
-        element.addEventListener('canplay',canPlayVideo);                        
-        element.addEventListener('timeupdate',screenplay);
-        element.addEventListener('ended',videoEnded);
+        adVideoElement.addEventListener('canplay',canPlayVideo);                        
+        adVideoElement.addEventListener('timeupdate',screenplay);
+        adVideoElement.addEventListener('ended',videoEnded);
+                      
+        spinBtnElement.addEventListener('click',resumeVideo);
 
-        element = document.getElementById("spinBtn");                       
-        element.addEventListener('click',resumeVideo);
-
-        element = document.getElementById("downloadBtn");;
-        element.addEventListener('click',downloadNow);
+        downloadBtnElement.addEventListener('click',downloadNow);
     })();
 
 
     function unmuteVideo(){
-        var video = document.getElementById("adVideo");
-        if(video.muted){
-            video.muted = false;
+        if(adVideoElement.muted){
+            adVideoElement.muted = false;
         }
     }
 
     function screenplay(){
 		
-        var btnElem;
-        var video = document.getElementById("adVideo");
-        var currentTimeInSecs = Math.floor(video.currentTime);
-        var prevTimeInSecs = Math.floor(prevVideoTime);
+        let videoCurrTime = adVideoElement.currentTime;
+        let currentTimeInSecs = Math.floor(videoCurrTime);
+        let prevTimeInSecs = Math.floor(prevVideoTime);
+        prevVideoTime = videoCurrTime;
 
-        if(currentTimeInSecs == 4 && prevTimeInSecs != 4){ //Detect first video currentTime>=4
-            video.pause();
-            btnElem = document.getElementById("spinBtn");
-            btnElem.style.visibility = "visible";
+        if(currentTimeInSecs == spinTimeSec && prevTimeInSecs != spinTimeSec){ //Detect first video currentTime>=spinTimeSec
+            adVideoElement.pause();
+            spinBtnElement.style.visibility = "visible";
             timeoutId = setTimeout(function(){
-                btnElem.style.visibility = "hidden";	
-                video.currentTime = 21; //Jump to second 21
-                video.play(); 
-            },10000);
+                spinBtnElement.style.visibility = "hidden";	
+                adVideoElement.currentTime = downloadTimeSec; //Jump to downloadTimeSec
+                adVideoElement.play(); 
+            },WaitForUserInteractionMiliSecs);
         }
     
-        if(currentTimeInSecs == 21 && prevTimeInSecs != 21){ //Detect first video currentTime>=21
-            btnElem = document.getElementById("downloadBtn");
-            btnElem.style.visibility = "visible";		
+        if(currentTimeInSecs == downloadTimeSec && prevTimeInSecs != downloadTimeSec){ //Detect first video currentTime>=downloadTimeSec
+            downloadBtnElement.style.visibility = "visible";		
         }
 
-        prevVideoTime = video.currentTime;
     }
 
     function resumeVideo(){
-        var btnElem = document.getElementById("spinBtn");
-        var video = document.getElementById("adVideo");
         if(timeoutId){
             clearTimeout(timeoutId);
         }
-        btnElem.style.visibility = "hidden";
-        video.play();
+        spinBtnElement.style.visibility = "hidden";
+        adVideoElement.play();
     }
 
     function downloadNow(){
-        var operatingSystem = getOperatingSystem();
+        let operatingSystem = getOperatingSystem();
         switch(operatingSystem){
             case operatingSystems.ANDRIOD:
                 window.open(downloadUrl.ANDRIOD);
@@ -89,7 +94,7 @@ function initVideoAd(){
     }
 
     function getOperatingSystem(){
-        var userAgent = navigator.userAgent;
+        let userAgent = navigator.userAgent;
 
         if(/Android/.test(userAgent)){
             return operatingSystems.ANDRIOD;
@@ -102,23 +107,31 @@ function initVideoAd(){
     }
 
     function sendTrackingPixel(target){
-        var img;
-        img = document.createElement("img");
+        let img = document.createElement("img");
         img.src = target;
         img.classList.add("trackingPixelImg");
-        document.body.appendChild(img);
     }
 
     function videoEnded(){
         sendTrackingPixel(trackingTarget.END);
+        removeUnneededEventListeners();
+    }
+
+    function removeUnneededEventListeners(){
+        videoContainerElement.removeEventListener('click',unmuteVideo);
+
+        adVideoElement.removeEventListener('canplay',canPlayVideo);                        
+        adVideoElement.removeEventListener('timeupdate',screenplay);
+        adVideoElement.removeEventListener('ended',videoEnded);
+         
+        spinBtnElement.removeEventListener('click',resumeVideo);
     }
 
     function canPlayVideo(){
-        var video = document.getElementById("adVideo");
-        video.addEventListener('play', function(event){
+        adVideoElement.addEventListener('play', function(event){
             sendTrackingPixel(trackingTarget.START);
         }, { once: true });
-        video.play();
+        adVideoElement.play();
     }
 
 };
